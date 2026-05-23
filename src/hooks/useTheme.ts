@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { flushSync } from 'react-dom';
 
 type Theme = 'light' | 'dark';
 
@@ -22,7 +23,16 @@ export function useTheme() {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+    if (!document.startViewTransition) {
+      setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+      return;
+    }
+
+    document.startViewTransition(() => {
+      flushSync(() => {
+        setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+      });
+    });
   };
 
   return { theme, toggleTheme };

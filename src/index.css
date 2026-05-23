@@ -52,10 +52,16 @@ body {
   font-family: var(--font-sans);
   background-color: var(--bg-body);
   color: var(--text-main);
-  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s ease;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+/* View Transition API */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.35s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .app-container {
@@ -80,7 +86,6 @@ body {
   justify-content: space-between;
   align-items: center;
   box-shadow: var(--shadow-sm);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(10px);
 }
 
@@ -373,7 +378,6 @@ body {
   box-shadow: var(--shadow-md);
   display: flex;
   flex-direction: column;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .editor-header {
