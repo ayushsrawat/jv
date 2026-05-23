@@ -159,10 +159,22 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, o
   return (
     <div className="editor-card">
       <div className="editor-header">
-        <span className="editor-title">Editor</span>
-        <div className="editor-status">
-          <span className={`status-dot ${!isValid ? 'error' : ''}`}></span>
-          {isValid ? 'Valid JSON' : 'Invalid JSON'}
+        <div className="breadcrumbs" title={breadcrumb}>
+          {breadcrumb}
+        </div>
+        <div className="meta-info">
+          {meta ? (
+            <>
+              <span>Size: {formatBytes(meta.size)}</span>
+              <span>Keys: {meta.keys.toLocaleString()}</span>
+              <span>Depth: {meta.depth}</span>
+            </>
+          ) : (
+            <span>Invalid JSON</span>
+          )}
+          <div className="editor-status" style={{ marginLeft: '8px' }}>
+            <span className={`status-dot ${!isValid ? 'error' : ''}`}></span>
+          </div>
         </div>
       </div>
       <div className="editor-content">
@@ -183,24 +195,8 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, o
             padding: { top: 16, bottom: 16 },
             fontFamily: 'var(--font-mono)'
           }}
-          defaultValue={`{\n  "message": "Welcome to jv",\n  "description": "Paste your JSON here and click Beautify!"\n}`}
+          defaultValue={`{\n  "server": "jv-production-01",\n  "status": "online",\n  "uptime": 1284592,\n  "metrics": {\n    "cpuLoad": 42.5,\n    "memoryUsed": "12GB",\n    "activeConnections": 1042\n  },\n  "endpoints": [\n    { "path": "/api/users", "latency": "42ms" },\n    { "path": "/api/auth", "latency": "120ms" }\n  ],\n  "message": "Paste your JSON payload here to start inspecting!"\n}`}
         />
-      </div>
-      <div className="status-bar">
-        <div className="breadcrumbs" title={breadcrumb}>
-          {breadcrumb}
-        </div>
-        <div className="meta-info">
-          {meta ? (
-            <>
-              <span>Size: {formatBytes(meta.size)}</span>
-              <span>Keys: {meta.keys.toLocaleString()}</span>
-              <span>Depth: {meta.depth}</span>
-            </>
-          ) : (
-            <span>Invalid JSON</span>
-          )}
-        </div>
       </div>
     </div>
   );
