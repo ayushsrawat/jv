@@ -46,10 +46,20 @@ function App() {
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [highlightIndex, setHighlightIndex] = useState(-1);
+  const listRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     setHighlightIndex(-1);
   }, [query, showQueryDropdown]);
+
+  useEffect(() => {
+    if (highlightIndex >= 0 && listRef.current) {
+      const activeItem = listRef.current.children[highlightIndex] as HTMLElement;
+      if (activeItem && activeItem.scrollIntoView) {
+        activeItem.scrollIntoView({ block: 'nearest' });
+      }
+    }
+  }, [highlightIndex]);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -270,7 +280,7 @@ function App() {
                 <div className="query-history-dropdown">
                   {!query && <div style={{ padding: '8px 12px', fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, background: 'var(--bg-toolbar)', borderBottom: '1px solid var(--border-color)' }}>RECENT QUERIES</div>}
                   {query && <div style={{ padding: '8px 12px', fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, background: 'var(--bg-toolbar)', borderBottom: '1px solid var(--border-color)' }}>AUTO-COMPLETE</div>}
-                  <ul className="query-history-list">
+                  <ul className="query-history-list" ref={listRef}>
                     {displayList.map((q, i) => (
                       <li 
                         key={i} 
