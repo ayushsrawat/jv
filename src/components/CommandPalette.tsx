@@ -29,7 +29,7 @@ export function CommandPalette({ open, setOpen, actions, theme, isDiffMode }: Co
       }
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        setOpen((open) => !open);
+        setOpen(!open);
       }
       if (e.key === '/' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
