@@ -1,4 +1,4 @@
-import { forwardRef, useImperativeHandle, useRef, useState, useEffect } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import Editor, { type OnMount } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
 import { getLocation, type JSONPath } from 'jsonc-parser';
