@@ -1,4 +1,4 @@
-import React, { forwardRef, useImperativeHandle, useRef, useState } from 'react';
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import Editor, { type OnMount } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
 
@@ -27,11 +27,11 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme },
       enableSchemaRequest: true,
     });
 
-    monaco.editor.onDidChangeMarkers((uris) => {
+    monaco.editor.onDidChangeMarkers(() => {
       const editorUri = editor.getModel()?.uri;
       if (editorUri) {
         const markers = monaco.editor.getModelMarkers({ resource: editorUri });
-        const hasErrors = markers.some(marker => marker.severity === monaco.MarkerSeverity.Error);
+        const hasErrors = markers.some((marker: editor.IMarker) => marker.severity === monaco.MarkerSeverity.Error);
         setIsValid(!hasErrors);
       }
     });
