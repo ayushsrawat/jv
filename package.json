@@ -14,11 +14,14 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+    "cmdk": "^1.1.1",
     "jsonc-parser": "^3.3.1",
     "jsonpath-plus": "^10.4.0",
     "lucide-react": "^1.16.0",
+    "lz-string": "^1.5.0",
     "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "react-dom": "^19.2.6",
+    "tslib": "^2.8.1"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
