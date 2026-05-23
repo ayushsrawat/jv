@@ -17,7 +17,4 @@ npm run dev
 
 ## Roadmap
 - [ ] Tree View
-- [ ] Diff Mode
-- [ ] Shareable Links
-- [ ] Command Palette & Global Shortcuts (CMD+K)
 - [ ] URL-based Payloads (Fetch directly from endpoints)

@@ -131,18 +131,24 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, o
 
     setIsEmpty(ed.getValue().trim() === '');
 
+    let debounceTimeout: ReturnType<typeof setTimeout>;
+
     ed.onDidChangeModelContent(() => {
       const val = ed.getValue();
       setIsEmpty(val.trim() === '');
       
       if (isDiffMode) return; 
-      try {
-        JSON.parse(val);
-        setIsValid(true);
-        updateMeta(val);
-      } catch (e) {
-        setIsValid(false);
-      }
+      
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(() => {
+        try {
+          JSON.parse(val);
+          setIsValid(true);
+          updateMeta(val);
+        } catch (e) {
+          setIsValid(false);
+        }
+      }, 400);
     });
 
     ed.onDidChangeCursorPosition((e) => {
