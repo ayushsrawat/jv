@@ -16,6 +16,7 @@ export interface JsonEditorRef {
 
 interface JsonEditorProps {
   theme: 'light' | 'dark';
+  minimap?: boolean;
   onPasteFormat?: (val: string) => void;
 }
 
@@ -69,7 +70,7 @@ function formatPath(path: JSONPath) {
   return ['root', ...path.map(p => (typeof p === 'number' ? `[${p}]` : p))].join(' > ');
 }
 
-export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, onPasteFormat }, ref) => {
+export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, minimap = false, onPasteFormat }, ref) => {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const diffEditorRef = useRef<editor.IStandaloneDiffEditor | null>(null);
   
@@ -366,7 +367,7 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, o
             beforeMount={handleBeforeMount}
             options={{
               originalEditable: true,
-              minimap: { enabled: false },
+              minimap: { enabled: minimap },
               fontSize: 14,
               fontFamily: 'var(--font-mono)',
               padding: { top: 16, bottom: 16 }
@@ -391,7 +392,7 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, o
             onMount={handleEditorDidMount}
             beforeMount={handleBeforeMount}
             options={{
-              minimap: { enabled: false },
+              minimap: { enabled: minimap },
               fontSize: 14,
               wordWrap: 'on',
               lineNumbers: 'on',

@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { Search, X } from 'lucide-react';
 import { JSONPath } from 'jsonpath-plus';
 import LZString from 'lz-string';
+import { Toaster, toast } from 'sonner';
 
 import { Header, type ViewMode } from './components/Header';
 import { JsonEditor, type JsonEditorRef } from './components/JsonEditor';
@@ -43,7 +44,7 @@ function App() {
   const [originalData, setOriginalData] = useState<string | null>(null);
   const [cmdkOpen, setCmdkOpen] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('code');
-  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [minimapEnabled, setMinimapEnabled] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const listRef = useRef<HTMLUListElement>(null);
@@ -61,11 +62,6 @@ function App() {
     }
   }, [highlightIndex]);
 
-  const showToast = (msg: string) => {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(null), 3000);
-  };
-
   useEffect(() => {
     const hash = window.location.hash;
     if (hash.startsWith('#data=')) {
@@ -78,12 +74,12 @@ function App() {
               editorRef.current.setValue(decompressed);
               editorRef.current.beautify();
               window.history.replaceState(null, '', window.location.pathname);
-              showToast('Loaded shared JSON payload');
+              toast.success('Loaded shared JSON payload');
             }
           }, 500);
         }
       } catch (e) {
-        console.error('Failed to parse shared data');
+        toast.error('Failed to parse shared data');
       }
     }
   }, []);
@@ -148,9 +144,9 @@ function App() {
     const url = `${window.location.origin}${window.location.pathname}#data=${compressed}`;
     
     navigator.clipboard.writeText(url).then(() => {
-      showToast('Shareable link copied to clipboard!');
+      toast.success('Shareable link copied to clipboard!');
     }).catch(() => {
-      showToast('Failed to copy to clipboard.');
+      toast.error('Failed to copy to clipboard.');
     });
   };
 
@@ -193,7 +189,7 @@ function App() {
       setShowQueryDropdown(false);
       setHighlightIndex(-1);
     } catch (err) {
-      showToast('Invalid JSON payload or path.');
+      toast.error('Invalid JSON payload or path.');
     }
   };
 
@@ -310,7 +306,7 @@ function App() {
         );
       })()}
 
-      <JsonEditor ref={editorRef} theme={theme} onPasteFormat={viewMode !== 'diff' ? saveToHistory : undefined} />
+      <JsonEditor ref={editorRef} theme={theme} minimap={minimapEnabled} onPasteFormat={viewMode !== 'diff' ? saveToHistory : undefined} />
 
       <CommandPalette 
         open={cmdkOpen} 
@@ -326,15 +322,26 @@ function App() {
           focusQuery: handleFocusQuery,
           toggleTheme: toggleTheme,
           toggleDiff: () => handleViewModeChange(viewMode === 'diff' ? 'code' : 'diff'),
-          toggleTree: () => handleViewModeChange(viewMode === 'tree' ? 'code' : 'tree')
+          toggleTree: () => handleViewModeChange(viewMode === 'tree' ? 'code' : 'tree'),
+          toggleMinimap: () => {
+            setMinimapEnabled(!minimapEnabled);
+            toast(!minimapEnabled ? 'Minimap Enabled' : 'Minimap Disabled');
+          }
         }} 
       />
 
-      {toastMsg && (
-        <div className="toast">
-          {toastMsg}
-        </div>
-      )}
+      <Toaster 
+        theme={theme as 'light' | 'dark'} 
+        position="bottom-right" 
+        toastOptions={{
+          style: {
+            background: 'var(--bg-card)',
+            color: 'var(--text-main)',
+            border: '1px solid var(--border-color)',
+            fontFamily: 'var(--font-sans)'
+          }
+        }}
+      />
     </div>
   );
 }

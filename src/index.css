@@ -623,25 +623,7 @@ body {
   color: var(--bg-card);
 }
 
-.toast {
-  position: fixed;
-  bottom: 24px;
-  left: 24px;
-  background-color: var(--text-main);
-  color: var(--bg-card);
-  padding: 12px 24px;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
-  font-weight: 500;
-  box-shadow: var(--shadow-lg);
-  z-index: 9999;
-  animation: slide-up 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes slide-up {
-  from { transform: translateY(100%); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
+/* Legacy toast CSS removed */
 
 @media (max-width: 768px) {
   .app-container {

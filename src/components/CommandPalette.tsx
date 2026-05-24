@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Command } from 'cmdk';
-import { FileJson, Trash2, Copy, Download, Share2, Search, Moon, Sun, SplitSquareHorizontal, Network } from 'lucide-react';
+import { FileJson, Trash2, Copy, Download, Share2, Search, Moon, Sun, SplitSquareHorizontal, Network, Map } from 'lucide-react';
 
 interface CommandPaletteProps {
   open: boolean;
@@ -15,6 +15,7 @@ interface CommandPaletteProps {
     toggleTheme: () => void;
     toggleDiff: () => void;
     toggleTree: () => void;
+    toggleMinimap: () => void;
   };
   theme: string;
   isDiffMode: boolean;
@@ -60,6 +61,9 @@ export function CommandPalette({ open, setOpen, actions, theme, isDiffMode }: Co
               </Command.Item>
               <Command.Item onSelect={() => { actions.toggleTree(); setOpen(false); }}>
                 <Network size={16} /> Toggle Tree Mode
+              </Command.Item>
+              <Command.Item onSelect={() => { actions.toggleMinimap(); setOpen(false); }}>
+                <Map size={16} /> Toggle Minimap
               </Command.Item>
               <Command.Item onSelect={() => { actions.clear(); setOpen(false); }}>
                 <Trash2 size={16} /> Clear Editor
