@@ -2,6 +2,8 @@ import { forwardRef, useImperativeHandle, useRef, useState } from 'react';
 import Editor, { DiffEditor, type OnMount, type BeforeMount } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
 import { getLocation, type JSONPath } from 'jsonc-parser';
+import ReactJson from '@microlink/react-json-view';
+import type { ViewMode } from './Header';
 
 export interface JsonEditorRef {
   beautify: () => void;
@@ -9,7 +11,7 @@ export interface JsonEditorRef {
   getValue: () => string;
   setValue: (val: string) => void;
   copyToClipboard: () => Promise<void>;
-  toggleDiffMode: (diffMode: boolean) => void;
+  setViewMode: (mode: ViewMode) => void;
 }
 
 interface JsonEditorProps {
@@ -75,9 +77,11 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, o
   const [meta, setMeta] = useState<MetaInfo | null>(null);
   const [breadcrumb, setBreadcrumb] = useState<string>('root');
   
-  const [isDiffMode, setIsDiffMode] = useState(false);
   const [diffOriginal, setDiffOriginal] = useState('{\n  "version": 1\n}');
   const [diffModified, setDiffModified] = useState('{\n  "version": 2\n}');
+
+  const [viewMode, setViewModeInternal] = useState<ViewMode>('code');
+  const [parsedTreeData, setParsedTreeData] = useState<any>({});
 
   const [isEmpty, setIsEmpty] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -137,14 +141,15 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, o
       const val = ed.getValue();
       setIsEmpty(val.trim() === '');
       
-      if (isDiffMode) return; 
+      if (viewMode === 'diff') return; 
       
       clearTimeout(debounceTimeout);
       debounceTimeout = setTimeout(() => {
         try {
-          JSON.parse(val);
+          const parsed = JSON.parse(val);
           setIsValid(true);
           updateMeta(val);
+          setParsedTreeData(parsed);
         } catch (e) {
           setIsValid(false);
         }
@@ -182,7 +187,7 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, o
 
   useImperativeHandle(ref, () => ({
     beautify: () => {
-      if (isDiffMode && diffEditorRef.current) {
+      if (diffEditorRef.current) {
         diffEditorRef.current.getOriginalEditor().getAction('editor.action.formatDocument')?.run();
         diffEditorRef.current.getModifiedEditor().getAction('editor.action.formatDocument')?.run();
       } else if (editorRef.current) {
@@ -190,7 +195,7 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, o
       }
     },
     clear: () => {
-      if (isDiffMode) {
+      if (viewMode === 'diff') {
         setDiffOriginal('');
         setDiffModified('');
       } else if (editorRef.current) {
@@ -198,33 +203,39 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, o
       }
     },
     getValue: () => {
-      if (isDiffMode) {
+      if (viewMode === 'diff') {
         return diffEditorRef.current?.getModifiedEditor().getValue() || '';
       }
       return editorRef.current?.getValue() || '';
     },
     setValue: (val: string) => {
-      if (isDiffMode && diffEditorRef.current) {
+      if (viewMode === 'diff' && diffEditorRef.current) {
         diffEditorRef.current.getModifiedEditor().setValue(val);
       } else if (editorRef.current) {
         editorRef.current.setValue(val);
       }
     },
     copyToClipboard: async () => {
-      const val = isDiffMode 
+      const val = viewMode === 'diff' 
         ? diffEditorRef.current?.getModifiedEditor().getValue() || ''
         : editorRef.current?.getValue() || '';
       try {
         await navigator.clipboard.writeText(val);
       } catch (err) {}
     },
-    toggleDiffMode: (diff: boolean) => {
-      if (diff) {
+    setViewMode: (mode: ViewMode) => {
+      if (mode === 'diff' && viewMode !== 'diff') {
         const val = editorRef.current?.getValue() || '';
         setDiffOriginal(val);
         setDiffModified(val);
       }
-      setIsDiffMode(diff);
+      if (mode === 'tree') {
+        try {
+          const val = editorRef.current?.getValue() || '';
+          setParsedTreeData(JSON.parse(val));
+        } catch (e) {}
+      }
+      setViewModeInternal(mode);
     }
   }));
 
@@ -245,7 +256,7 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, o
       const reader = new FileReader();
       reader.onload = (event) => {
         const content = event.target?.result as string;
-        if (content && editorRef.current && !isDiffMode) {
+        if (content && editorRef.current && viewMode !== 'diff') {
           editorRef.current.setValue(content);
           editorRef.current.getAction('editor.action.formatDocument')?.run();
         }
@@ -258,9 +269,9 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, o
     <div className="editor-card">
       <div className="editor-header">
         <div className="breadcrumbs" title={breadcrumb}>
-          {isDiffMode ? 'Diff Mode (Original vs Modified)' : breadcrumb}
+          {viewMode === 'diff' ? 'Diff Mode (Original vs Modified)' : breadcrumb}
         </div>
-        {!isDiffMode && (
+        {viewMode !== 'diff' && (
           <div className="meta-info">
             {meta ? (
               <>
@@ -283,7 +294,7 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, o
         onDragLeave={onDragLeave}
         onDrop={onDrop}
       >
-        {(!isDiffMode && isEmpty) && (
+        {(!viewMode.includes('diff') && isEmpty) && (
           <div className="empty-state">
             <div className="empty-state-content">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '16px', opacity: 0.5 }}>
@@ -301,10 +312,48 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, o
         <div 
           style={{ 
             position: 'absolute', inset: 0, 
-            zIndex: isDiffMode ? 1 : -1, 
-            opacity: isDiffMode ? 1 : 0, 
-            pointerEvents: isDiffMode ? 'auto' : 'none',
-            visibility: isDiffMode ? 'visible' : 'hidden'
+            zIndex: viewMode === 'tree' ? 1 : -1, 
+            opacity: viewMode === 'tree' ? 1 : 0, 
+            pointerEvents: viewMode === 'tree' ? 'auto' : 'none',
+            visibility: viewMode === 'tree' ? 'visible' : 'hidden',
+            overflow: 'auto',
+            padding: '24px',
+            backgroundColor: 'var(--bg-card)'
+          }}
+        >
+          {viewMode === 'tree' && isValid && (
+            <ReactJson 
+              src={parsedTreeData} 
+              theme={theme === 'dark' ? 'twilight' : 'rjv-default'} 
+              style={{ backgroundColor: 'transparent', fontFamily: 'var(--font-mono)', fontSize: '14px' }}
+              displayDataTypes={false}
+              displayObjectSize={true}
+              enableClipboard={true}
+              collapsed={2}
+            />
+          )}
+          {viewMode === 'tree' && !isValid && (
+            <div className="empty-state" style={{ pointerEvents: 'auto' }}>
+              <div className="empty-state-content">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '16px', opacity: 0.5, color: '#ef4444' }}>
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <h3 style={{ color: '#ef4444' }}>Invalid JSON</h3>
+                <p>Please fix syntax errors in Code mode before viewing the tree.</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div 
+          style={{ 
+            position: 'absolute', inset: 0, 
+            zIndex: viewMode === 'diff' ? 1 : -1, 
+            opacity: viewMode === 'diff' ? 1 : 0, 
+            pointerEvents: viewMode === 'diff' ? 'auto' : 'none',
+            visibility: viewMode === 'diff' ? 'visible' : 'hidden'
           }}
         >
           <DiffEditor
@@ -328,10 +377,10 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, o
         <div 
           style={{ 
             position: 'absolute', inset: 0, 
-            zIndex: !isDiffMode ? 1 : -1, 
-            opacity: !isDiffMode ? 1 : 0, 
-            pointerEvents: !isDiffMode ? 'auto' : 'none',
-            visibility: !isDiffMode ? 'visible' : 'hidden'
+            zIndex: viewMode === 'code' ? 1 : -1, 
+            opacity: viewMode === 'code' ? 1 : 0, 
+            pointerEvents: viewMode === 'code' ? 'auto' : 'none',
+            visibility: viewMode === 'code' ? 'visible' : 'hidden'
           }}
         >
           <Editor

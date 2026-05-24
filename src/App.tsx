@@ -3,7 +3,7 @@ import { Search, X } from 'lucide-react';
 import { JSONPath } from 'jsonpath-plus';
 import LZString from 'lz-string';
 
-import { Header } from './components/Header';
+import { Header, type ViewMode } from './components/Header';
 import { JsonEditor, type JsonEditorRef } from './components/JsonEditor';
 import { CommandPalette } from './components/CommandPalette';
 import { useTheme } from './hooks/useTheme';
@@ -42,7 +42,7 @@ function App() {
   const [showQueryDropdown, setShowQueryDropdown] = useState(false);
   const [originalData, setOriginalData] = useState<string | null>(null);
   const [cmdkOpen, setCmdkOpen] = useState(false);
-  const [isDiffMode, setIsDiffMode] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('code');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [highlightIndex, setHighlightIndex] = useState(-1);
@@ -107,7 +107,7 @@ function App() {
 
   const handleBeautify = () => {
     editorRef.current?.beautify();
-    if (!isDiffMode) {
+    if (viewMode !== 'diff') {
       setTimeout(() => {
         const val = editorRef.current?.getValue();
         if (val) saveToHistory(val);
@@ -154,14 +154,13 @@ function App() {
     });
   };
 
-  const handleToggleDiff = () => {
-    const nextMode = !isDiffMode;
-    setIsDiffMode(nextMode);
-    editorRef.current?.toggleDiffMode(nextMode);
+  const handleViewModeChange = (mode: ViewMode) => {
+    setViewMode(mode);
+    editorRef.current?.setViewMode(mode);
   };
 
   const handleFocusQuery = () => {
-    if (queryInputRef.current && !isDiffMode) {
+    if (queryInputRef.current && viewMode !== 'diff') {
       queryInputRef.current.focus();
     }
   };
@@ -180,7 +179,7 @@ function App() {
 
   const handleApplyQuery = (qToApply?: string) => {
     const q = qToApply || query;
-    if (!q.trim() || isDiffMode) return;
+    if (!q.trim() || viewMode === 'diff') return;
     
     try {
       const currentVal = originalData || editorRef.current?.getValue() || '';
@@ -199,7 +198,7 @@ function App() {
   };
 
   const handleResetQuery = () => {
-    if (originalData && !isDiffMode) {
+    if (originalData && viewMode !== 'diff') {
       editorRef.current?.setValue(originalData);
       setOriginalData(null);
     }
@@ -216,14 +215,14 @@ function App() {
         onCopy={handleCopy}
         onDownload={handleDownload}
         onShare={handleShare}
-        isDiffMode={isDiffMode}
-        onToggleDiff={handleToggleDiff}
+        viewMode={viewMode}
+        onChangeViewMode={handleViewModeChange}
         onOpenCmdk={() => setCmdkOpen(true)}
         history={history}
-        onSelectHistory={(item) => !isDiffMode && editorRef.current?.setValue(item.data)}
+        onSelectHistory={(item) => viewMode !== 'diff' && editorRef.current?.setValue(item.data)}
       />
       
-      {!isDiffMode && (() => {
+      {viewMode !== 'diff' && (() => {
         const displayList = query ? suggestions.filter(s => s.toLowerCase().includes(query.toLowerCase())).slice(0, 8) : queryHistory;
 
         const handleQueryKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -311,13 +310,13 @@ function App() {
         );
       })()}
 
-      <JsonEditor ref={editorRef} theme={theme} onPasteFormat={!isDiffMode ? saveToHistory : undefined} />
+      <JsonEditor ref={editorRef} theme={theme} onPasteFormat={viewMode !== 'diff' ? saveToHistory : undefined} />
 
       <CommandPalette 
         open={cmdkOpen} 
         setOpen={setCmdkOpen} 
         theme={theme}
-        isDiffMode={isDiffMode}
+        isDiffMode={viewMode === 'diff'}
         actions={{
           beautify: handleBeautify,
           clear: handleClear,
@@ -326,7 +325,8 @@ function App() {
           share: handleShare,
           focusQuery: handleFocusQuery,
           toggleTheme: toggleTheme,
-          toggleDiff: handleToggleDiff
+          toggleDiff: () => handleViewModeChange(viewMode === 'diff' ? 'code' : 'diff'),
+          toggleTree: () => handleViewModeChange(viewMode === 'tree' ? 'code' : 'tree')
         }} 
       />
 
