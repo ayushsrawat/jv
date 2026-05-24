@@ -10,7 +10,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'jv - JSON Viewer',
+        name: 'JSON Viewer',
         short_name: 'jv',
         description: 'A minimalist JSON Viewer and Formatter',
         theme_color: '#0a0a0a',
