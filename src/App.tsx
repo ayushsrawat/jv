@@ -32,6 +32,19 @@ function extractPaths(obj: any, currentPath = '$', depth = 0): string[] {
   return paths;
 }
 
+const getInitialSharedData = (): string | null => {
+  try {
+    const hash = window.location.hash;
+    if (hash.startsWith('#data=')) {
+      const compressed = hash.replace('#data=', '');
+      return LZString.decompressFromEncodedURIComponent(compressed) || null;
+    }
+  } catch (e) {
+    // Ignore invalid compression
+  }
+  return null;
+};
+
 function App() {
   const { theme, toggleTheme } = useTheme();
   const { history, saveToHistory } = useHistory();
@@ -62,27 +75,14 @@ function App() {
     }
   }, [highlightIndex]);
 
+  const [sharedData] = useState<string | null>(getInitialSharedData);
+
   useEffect(() => {
-    const hash = window.location.hash;
-    if (hash.startsWith('#data=')) {
-      try {
-        const compressed = hash.replace('#data=', '');
-        const decompressed = LZString.decompressFromEncodedURIComponent(compressed);
-        if (decompressed) {
-          setTimeout(() => {
-            if (editorRef.current) {
-              editorRef.current.setValue(decompressed);
-              editorRef.current.beautify();
-              window.history.replaceState(null, '', window.location.pathname);
-              toast.success('Loaded shared JSON payload');
-            }
-          }, 500);
-        }
-      } catch (e) {
-        toast.error('Failed to parse shared data');
-      }
+    if (sharedData) {
+      window.history.replaceState(null, '', window.location.pathname);
+      toast.success('Loaded shared JSON payload');
     }
-  }, []);
+  }, [sharedData]);
 
   useEffect(() => {
     try {
@@ -306,7 +306,7 @@ function App() {
         );
       })()}
 
-      <JsonEditor ref={editorRef} theme={theme} minimap={minimapEnabled} onPasteFormat={viewMode !== 'diff' ? saveToHistory : undefined} />
+      <JsonEditor ref={editorRef} theme={theme} minimap={minimapEnabled} initialValue={sharedData || undefined} onPasteFormat={viewMode !== 'diff' ? saveToHistory : undefined} />
 
       <CommandPalette 
         open={cmdkOpen} 

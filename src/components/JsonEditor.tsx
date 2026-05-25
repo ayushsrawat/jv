@@ -17,6 +17,7 @@ export interface JsonEditorRef {
 interface JsonEditorProps {
   theme: 'light' | 'dark';
   minimap?: boolean;
+  initialValue?: string;
   onPasteFormat?: (val: string) => void;
 }
 
@@ -70,7 +71,7 @@ function formatPath(path: JSONPath) {
   return ['root', ...path.map(p => (typeof p === 'number' ? `[${p}]` : p))].join(' > ');
 }
 
-export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, minimap = false, onPasteFormat }, ref) => {
+export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, minimap = false, initialValue, onPasteFormat }, ref) => {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const diffEditorRef = useRef<editor.IStandaloneDiffEditor | null>(null);
   
@@ -135,6 +136,15 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, m
     });
 
     setIsEmpty(ed.getValue().trim() === '');
+    
+    if (initialValue) {
+      try {
+        const parsed = JSON.parse(initialValue);
+        ed.setValue(JSON.stringify(parsed, null, 2));
+      } catch (e) {
+        // Leave as is if invalid
+      }
+    }
 
     let debounceTimeout: ReturnType<typeof setTimeout>;
 
@@ -169,14 +179,16 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, m
     ed.onDidPaste(() => {
       const val = ed.getValue();
       try {
-        JSON.parse(val);
-        ed.getAction('editor.action.formatDocument')?.run().then(() => {
-          if (onPasteFormat) {
-             const newVal = ed.getValue();
-             onPasteFormat(newVal);
-          }
-        });
-      } catch (e) {}
+        const parsed = JSON.parse(val);
+        const formatted = JSON.stringify(parsed, null, 2);
+        ed.setValue(formatted);
+        if (onPasteFormat) {
+           onPasteFormat(formatted);
+        }
+      } catch (e) {
+        // Fallback to Monaco's format if it's slightly invalid
+        ed.getAction('editor.action.formatDocument')?.run();
+      }
     });
 
     updateMeta(ed.getValue());
@@ -188,11 +200,23 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, m
 
   useImperativeHandle(ref, () => ({
     beautify: () => {
-      if (diffEditorRef.current) {
-        diffEditorRef.current.getOriginalEditor().getAction('editor.action.formatDocument')?.run();
-        diffEditorRef.current.getModifiedEditor().getAction('editor.action.formatDocument')?.run();
+      const tryFormat = (ed: editor.IStandaloneCodeEditor) => {
+        try {
+          const val = ed.getValue();
+          if (!val.trim()) return;
+          const parsed = JSON.parse(val);
+          ed.setValue(JSON.stringify(parsed, null, 2));
+        } catch (e) {
+          // Fallback to Monaco formatter if JSON has syntax errors
+          ed.getAction('editor.action.formatDocument')?.run();
+        }
+      };
+
+      if (viewMode === 'diff' && diffEditorRef.current) {
+        tryFormat(diffEditorRef.current.getOriginalEditor());
+        tryFormat(diffEditorRef.current.getModifiedEditor());
       } else if (editorRef.current) {
-        editorRef.current.getAction('editor.action.formatDocument')?.run();
+        tryFormat(editorRef.current);
       }
     },
     clear: () => {
@@ -258,8 +282,13 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, m
       reader.onload = (event) => {
         const content = event.target?.result as string;
         if (content && editorRef.current && viewMode !== 'diff') {
-          editorRef.current.setValue(content);
-          editorRef.current.getAction('editor.action.formatDocument')?.run();
+          try {
+            const parsed = JSON.parse(content);
+            editorRef.current.setValue(JSON.stringify(parsed, null, 2));
+          } catch (e) {
+            editorRef.current.setValue(content);
+            editorRef.current.getAction('editor.action.formatDocument')?.run();
+          }
         }
       };
       reader.readAsText(file);
@@ -403,7 +432,7 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, m
               padding: { top: 16, bottom: 16 },
               fontFamily: 'var(--font-mono)'
             }}
-            defaultValue={`{\n  "server": "jv-production-01",\n  "status": "online",\n  "uptime": 1284592,\n  "metrics": {\n    "cpuLoad": 42.5,\n    "memoryUsed": "12GB",\n    "activeConnections": 1042\n  },\n  "endpoints": [\n    { "path": "/api/users", "latency": "42ms" },\n    { "path": "/api/auth", "latency": "120ms" }\n  ],\n  "message": "Paste your JSON payload here to start inspecting!"\n}`}
+            defaultValue={initialValue || `{\n  "server": "jv-production-01",\n  "status": "online",\n  "uptime": 1284592,\n  "metrics": {\n    "cpuLoad": 42.5,\n    "memoryUsed": "12GB",\n    "activeConnections": 1042\n  },\n  "endpoints": [\n    { "path": "/api/users", "latency": "42ms" },\n    { "path": "/api/auth", "latency": "120ms" }\n  ],\n  "message": "Paste your JSON payload here to start inspecting!"\n}`}
           />
         </div>
       </div>
