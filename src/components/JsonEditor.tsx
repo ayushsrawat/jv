@@ -81,6 +81,7 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, m
   
   const [diffOriginal, setDiffOriginal] = useState('{\n  "version": 1\n}');
   const [diffModified, setDiffModified] = useState('{\n  "version": 2\n}');
+  const [diffLanguage, setDiffLanguage] = useState('json');
 
   const [viewMode, setViewModeInternal] = useState<ViewMode>('code');
   const [parsedTreeData, setParsedTreeData] = useState<any>({});
@@ -301,6 +302,29 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, m
         <div className="breadcrumbs" title={breadcrumb}>
           {viewMode === 'diff' ? 'Diff Mode (Original vs Modified)' : breadcrumb}
         </div>
+        {viewMode === 'diff' && (
+          <div className="diff-lang-selector">
+            <select 
+              value={diffLanguage} 
+              onChange={(e) => setDiffLanguage(e.target.value)}
+              className="sleek-select"
+            >
+              <option value="json">JSON</option>
+              <option value="javascript">JavaScript</option>
+              <option value="typescript">TypeScript</option>
+              <option value="python">Python</option>
+              <option value="java">Java</option>
+              <option value="go">Go</option>
+              <option value="html">HTML</option>
+              <option value="css">CSS</option>
+              <option value="yaml">YAML</option>
+              <option value="xml">XML</option>
+              <option value="sql">SQL</option>
+              <option value="markdown">Markdown</option>
+              <option value="plaintext">Plain Text</option>
+            </select>
+          </div>
+        )}
         {viewMode !== 'diff' && (
           <div className="meta-info">
             {meta ? (
@@ -388,7 +412,7 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, m
         >
           <DiffEditor
             height="100%"
-            language="json"
+            language={diffLanguage}
             theme={theme === 'dark' ? 'jv-dark' : 'jv-light'}
             original={diffOriginal}
             modified={diffModified}
