@@ -169,27 +169,33 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, m
     });
 
     ed.onDidChangeCursorPosition((e) => {
-      const model = ed.getModel();
-      if (!model) return;
-      const offset = model.getOffsetAt(e.position);
-      const text = model.getValue();
-      const location = getLocation(text, offset);
-      setBreadcrumb(formatPath(location.path));
+      try {
+        const model = ed.getModel();
+        if (!model) return;
+        const offset = model.getOffsetAt(e.position);
+        const text = model.getValue();
+        const location = getLocation(text, offset);
+        setBreadcrumb(formatPath(location.path));
+      } catch (err) {
+        // Ignore out of bounds position events during massive model replacements
+      }
     });
 
     ed.onDidPaste(() => {
-      const val = ed.getValue();
-      try {
-        const parsed = JSON.parse(val);
-        const formatted = JSON.stringify(parsed, null, 2);
-        ed.setValue(formatted);
-        if (onPasteFormat) {
-           onPasteFormat(formatted);
+      setTimeout(() => {
+        if (!editorRef.current) return;
+        const val = editorRef.current.getValue();
+        try {
+          const parsed = JSON.parse(val);
+          const formatted = JSON.stringify(parsed, null, 2);
+          editorRef.current.setValue(formatted);
+          if (onPasteFormat) {
+             onPasteFormat(formatted);
+          }
+        } catch (e) {
+          editorRef.current.getAction('editor.action.formatDocument')?.run();
         }
-      } catch (e) {
-        // Fallback to Monaco's format if it's slightly invalid
-        ed.getAction('editor.action.formatDocument')?.run();
-      }
+      }, 10);
     });
 
     updateMeta(ed.getValue());
