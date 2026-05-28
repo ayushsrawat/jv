@@ -82,6 +82,7 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, m
   const [diffOriginal, setDiffOriginal] = useState('{\n  "version": 1\n}');
   const [diffModified, setDiffModified] = useState('{\n  "version": 2\n}');
   const [diffLanguage, setDiffLanguage] = useState('json');
+  const [showLangDropdown, setShowLangDropdown] = useState(false);
 
   const [viewMode, setViewModeInternal] = useState<ViewMode>('code');
   const [parsedTreeData, setParsedTreeData] = useState<any>({});
@@ -308,29 +309,60 @@ export const JsonEditor = forwardRef<JsonEditorRef, JsonEditorProps>(({ theme, m
         <div className="breadcrumbs" title={breadcrumb}>
           {viewMode === 'diff' ? 'Diff Mode (Original vs Modified)' : breadcrumb}
         </div>
-        {viewMode === 'diff' && (
-          <div className="diff-lang-selector">
-            <select 
-              value={diffLanguage} 
-              onChange={(e) => setDiffLanguage(e.target.value)}
-              className="sleek-select"
-            >
-              <option value="json">JSON</option>
-              <option value="javascript">JavaScript</option>
-              <option value="typescript">TypeScript</option>
-              <option value="python">Python</option>
-              <option value="java">Java</option>
-              <option value="go">Go</option>
-              <option value="html">HTML</option>
-              <option value="css">CSS</option>
-              <option value="yaml">YAML</option>
-              <option value="xml">XML</option>
-              <option value="sql">SQL</option>
-              <option value="markdown">Markdown</option>
-              <option value="plaintext">Plain Text</option>
-            </select>
-          </div>
-        )}
+        {viewMode === 'diff' && (() => {
+          const LANGUAGES = [
+            { id: 'json', name: 'JSON' },
+            { id: 'javascript', name: 'JavaScript' },
+            { id: 'typescript', name: 'TypeScript' },
+            { id: 'python', name: 'Python' },
+            { id: 'java', name: 'Java' },
+            { id: 'go', name: 'Go' },
+            { id: 'html', name: 'HTML' },
+            { id: 'css', name: 'CSS' },
+            { id: 'yaml', name: 'YAML' },
+            { id: 'xml', name: 'XML' },
+            { id: 'sql', name: 'SQL' },
+            { id: 'markdown', name: 'Markdown' },
+            { id: 'plaintext', name: 'Plain Text' }
+          ];
+          return (
+            <div className="diff-lang-selector" style={{ position: 'relative' }}>
+              <button 
+                className="seg-btn" 
+                onClick={() => setShowLangDropdown(!showLangDropdown)}
+                onBlur={() => setTimeout(() => setShowLangDropdown(false), 200)}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid var(--border-color)', backgroundColor: 'var(--bg-card)' }}
+              >
+                {LANGUAGES.find(l => l.id === diffLanguage)?.name}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+              </button>
+              {showLangDropdown && (
+                <div className="history-dropdown" style={{ right: 0, left: 'auto', width: '200px', top: '100%', marginTop: '4px' }}>
+                  <ul className="history-list" style={{ maxHeight: '250px' }}>
+                    {LANGUAGES.map(lang => (
+                      <li 
+                        key={lang.id} 
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setDiffLanguage(lang.id);
+                          setShowLangDropdown(false);
+                        }}
+                        style={{ 
+                          padding: '8px 16px',
+                          backgroundColor: diffLanguage === lang.id ? 'var(--btn-hover)' : 'transparent',
+                          fontWeight: diffLanguage === lang.id ? 600 : 400,
+                          fontSize: '13px'
+                        }}
+                      >
+                        {lang.name}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          );
+        })()}
         {viewMode !== 'diff' && (
           <div className="meta-info">
             {meta ? (
