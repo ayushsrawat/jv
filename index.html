@@ -9,7 +9,48 @@
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <title>jv</title>
+    <title>JSON Viewer & Formatter | Fast, Secure, Offline-First</title>
+    <meta name="description" content="A blazing fast, privacy-first, offline JSON viewer and formatter. Parse, beautify, diff, and query JSON payloads entirely in your browser using the Monaco Editor engine." />
+    <meta name="keywords" content="json viewer, json formatter, json beautifier, json parser, offline json tool, json diff, json path, developer tools" />
+    
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="JSON Viewer & Formatter" />
+    <meta property="og:description" content="A blazing fast, privacy-first, offline JSON viewer and formatter. Parse and query JSON directly in your browser." />
+    <meta name="twitter:card" content="summary" />
+    
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "jv - JSON Viewer",
+      "operatingSystem": "Web",
+      "applicationCategory": "DeveloperApplication",
+      "description": "A minimal, privacy-first JSON formatter and viewer built with React and Monaco Editor. Works fully offline as a PWA.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+    
+    <style>
+      /* Utility class to hide static HTML from users but keep it visible to Search Engines */
+      .visually-hidden {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        padding: 0 !important;
+        margin: -1px !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+      }
+    </style>
+    
     <script>
       (function() {
         try {
@@ -23,6 +64,19 @@
     <link rel="stylesheet" crossorigin href="/jv/assets/index-B_xL3lCu.css">
   <link rel="manifest" href="/jv/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/jv/registerSW.js"></script></head>
   <body>
+    <article class="visually-hidden">
+      <h1>Free Online JSON Viewer & Formatter</h1>
+      <p>Welcome to <strong>jv</strong>, the ultimate privacy-first JSON viewer designed for developers. Built on top of the powerful Monaco Editor (the same engine powering VS Code), this tool allows you to easily parse, beautify, minify, and query massive JSON payloads with zero latency.</p>
+      <h2>Key Features:</h2>
+      <ul>
+        <li><strong>100% Privacy & Security:</strong> No backend server. Your JSON data never leaves your browser.</li>
+        <li><strong>Offline Capable:</strong> Install it as a Progressive Web App (PWA) and use it offline anywhere.</li>
+        <li><strong>Advanced JSONPath Querying:</strong> Extract precise data from complex objects instantly.</li>
+        <li><strong>Interactive Tree View & Code Diffing:</strong> Visually inspect JSON structures or compare modified payloads across multiple programming languages.</li>
+      </ul>
+      <p>Whether you're debugging API responses, formatting configuration files, or exploring complex data hierarchies, this free JSON formatter is the fastest and most secure tool available online.</p>
+    </article>
+    
     <div id="root"></div>
   </body>
 </html>
