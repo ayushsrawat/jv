@@ -174,8 +174,13 @@ function App() {
   };
 
   const handleApplyQuery = (qToApply?: string) => {
-    const q = qToApply || query;
-    if (!q.trim() || viewMode === 'diff') return;
+    const q = qToApply ?? query;
+    if (viewMode === 'diff') return;
+    
+    if (!q.trim()) {
+      handleResetQuery();
+      return;
+    }
     
     try {
       const currentVal = originalData || editorRef.current?.getValue() || '';
@@ -199,6 +204,8 @@ function App() {
       setOriginalData(null);
     }
     setQuery('');
+    setShowQueryDropdown(false);
+    setHighlightIndex(-1);
   };
 
   return (
@@ -260,7 +267,10 @@ function App() {
                 className="query-input" 
                 placeholder="JSON Path query (e.g. $.store.book[*].author)" 
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setShowQueryDropdown(true);
+                }}
                 onFocus={handleQueryInputFocus}
                 onBlur={() => setTimeout(() => setShowQueryDropdown(false), 200)}
                 onKeyDown={handleQueryKeyDown}
